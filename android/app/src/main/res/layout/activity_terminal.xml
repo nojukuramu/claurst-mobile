@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1e1e2e">
+
+    <!--
+        Full-screen WebView running xterm.js.
+        The TerminalActivity wires up the JavascriptInterface and loads
+        file:///android_asset/terminal.html into this view.
+    -->
+    <WebView
+        android:id="@+id/web_view_terminal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</FrameLayout>

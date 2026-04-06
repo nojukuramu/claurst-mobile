@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>ClaURST Terminal</title>
+
+  <!-- xterm.js is downloaded by the build pipeline into assets/xterm/ -->
+  <link rel="stylesheet" href="xterm/xterm.css" />
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #1e1e2e;  /* Catppuccin Mocha base */
+      overflow: hidden;
+    }
+    #terminal-container {
+      width: 100%; height: 100%;
+    }
+    /* Soft keyboard helper — a hidden textarea that captures typed characters
+       when the user taps the screen on mobile. */
+    #soft-keyboard-input {
+      position: fixed;
+      top: -200px;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="terminal-container"></div>
+<textarea id="soft-keyboard-input"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"></textarea>
+
+<script src="xterm/xterm.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Terminal setup -------------------------------------------- */
+  var term = new Terminal({
+    theme: {
+      background:    '#1e1e2e',
+      foreground:    '#cdd6f4',
+      cursor:        '#f5e0dc',
+      cursorAccent:  '#1e1e2e',
+      selectionBackground: 'rgba(147,153,178,0.3)',
+      black:   '#45475a', red:     '#f38ba8',
+      green:   '#a6e3a1', yellow:  '#f9e2af',
+      blue:    '#89b4fa', magenta: '#f5c2e7',
+      cyan:    '#94e2d5', white:   '#bac2de',
+      brightBlack:   '#585b70', brightRed:     '#f38ba8',
+      brightGreen:   '#a6e3a1', brightYellow:  '#f9e2af',
+      brightBlue:    '#89b4fa', brightMagenta: '#f5c2e7',
+      brightCyan:    '#94e2d5', brightWhite:   '#a6adc8'
+    },
+    fontFamily: 'monospace',
+    fontSize:   14,
+    lineHeight: 1.2,
+    cursorBlink: true,
+    cursorStyle: 'block',
+    scrollback:  5000,
+    convertEol:  false,
+    allowProposedApi: true
+  });
+
+  term.open(document.getElementById('terminal-container'));
+
+  /* ---------- Resize handling ------------------------------------------- */
+  // Measure a single monospace character using an off-screen canvas to get
+  // accurate cell dimensions without relying on xterm.js private internals.
+  function measureCharSize() {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.font = term.options.fontSize + 'px ' + term.options.fontFamily;
+    var width  = ctx.measureText('W').width  || 8;
+    var height = term.options.fontSize * (term.options.lineHeight || 1.2);
+    return { width: Math.ceil(width), height: Math.ceil(height) };
+  }
+
+  function fitTerminal() {
+    var container = document.getElementById('terminal-container');
+    var cell = measureCharSize();
+    var cols = Math.max(10, Math.floor(container.clientWidth  / cell.width));
+    var rows = Math.max(4,  Math.floor(container.clientHeight / cell.height));
+    if (cols !== term.cols || rows !== term.rows) {
+      term.resize(cols, rows);
+      if (typeof Android !== 'undefined') {
+        Android.onResize(cols, rows);
+      }
+    }
+  }
+
+  window.addEventListener('resize', fitTerminal);
+  // Delay initial fit until the DOM has laid out.
+  setTimeout(fitTerminal, 100);
+
+  /* ---------- Input routing --------------------------------------------- */
+  term.onData(function (data) {
+    if (typeof Android !== 'undefined') {
+      Android.sendInput(data);
+    }
+  });
+
+  /* ---------- Soft keyboard (mobile) ------------------------------------ */
+  var skInput = document.getElementById('soft-keyboard-input');
+  document.getElementById('terminal-container').addEventListener('click', function () {
+    skInput.focus();
+  });
+  skInput.addEventListener('input', function () {
+    var val = skInput.value;
+    if (val.length > 0) {
+      if (typeof Android !== 'undefined') Android.sendInput(val);
+      skInput.value = '';
+    }
+  });
+  skInput.addEventListener('keydown', function (e) {
+    var map = {
+      Backspace: '\x7f', Tab: '\t', Enter: '\r',
+      ArrowUp: '\x1b[A', ArrowDown: '\x1b[B',
+      ArrowRight: '\x1b[C', ArrowLeft: '\x1b[D',
+      Escape: '\x1b', Delete: '\x1b[3~',
+      Home: '\x1bOH', End: '\x1bOF',
+      PageUp: '\x1b[5~', PageDown: '\x1b[6~',
+      F1: '\x1bOP',  F2: '\x1bOQ',  F3: '\x1bOR',  F4: '\x1bOS',
+      F5: '\x1b[15~', F6: '\x1b[17~', F7: '\x1b[18~', F8: '\x1b[19~'
+    };
+    var seq = map[e.key];
+    if (seq) {
+      e.preventDefault();
+      if (typeof Android !== 'undefined') Android.sendInput(seq);
+    }
+  });
+
+  /* ---------- Output API (called from Kotlin) --------------------------- */
+
+  /**
+   * writeOutput(data: string)
+   * Called by TerminalActivity via evaluateJavascript to push data from the
+   * process's PTY master into the xterm.js renderer.
+   */
+  window.writeOutput = function (data) {
+    term.write(data);
+  };
+
+  /**
+   * clearTerminal()
+   * Clears the terminal viewport (e.g. on reconnect).
+   */
+  window.clearTerminal = function () {
+    term.clear();
+  };
+
+})();
+</script>
+</body>
+</html>

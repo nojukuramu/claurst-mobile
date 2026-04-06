@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ClaURST</string>
+    <string name="tagline">Terminal AI Agent · Powered by Rust</string>
+    <string name="open_terminal">Open Terminal</string>
+    <string name="open_workspace">Browse Workspace</string>
+    <string name="workspace_title">Workspace</string>
+    <string name="workspace_empty">Workspace is empty.\nStart CLAURST to create files.</string>
+    <string name="binary_not_found">CLAURST binary not found for this device architecture.</string>
+    <string name="version_label">v%s</string>
+    <string name="file_icon_desc">File icon</string>
+    <string name="close">Close</string>
+</resources>
