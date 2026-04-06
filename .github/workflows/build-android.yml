@@ -91,8 +91,16 @@ jobs:
           chmod +x gradlew
           # Download the Gradle wrapper JAR (not committed to source control).
           GRADLE_VER="8.8"
-          curl -fsSL -o gradle/wrapper/gradle-wrapper.jar \
+          URLS=(
+            "https://github.com/gradle/gradle/raw/v${GRADLE_VER}.0/gradle/wrapper/gradle-wrapper.jar"
             "https://github.com/gradle/gradle/raw/v${GRADLE_VER}/gradle/wrapper/gradle-wrapper.jar"
+          )
+          for URL in "${URLS[@]}"; do
+            if curl -fsSL -o gradle/wrapper/gradle-wrapper.jar "$URL"; then
+              break
+            fi
+          done
+          test -s gradle/wrapper/gradle-wrapper.jar
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
