@@ -4,10 +4,18 @@
     <string name="tagline">Terminal AI Agent · Powered by Rust</string>
     <string name="open_terminal">Open Terminal</string>
     <string name="open_workspace">Browse Workspace</string>
+    <string name="open_setup">Setup Guide</string>
     <string name="workspace_title">Workspace</string>
     <string name="workspace_empty">Workspace is empty.\nStart CLAURST to create files.</string>
     <string name="binary_not_found">CLAURST binary not found for this device architecture.</string>
     <string name="version_label">v%s</string>
     <string name="file_icon_desc">File icon</string>
     <string name="close">Close</string>
+    <string name="terminal_status_loading">Loading terminal UI…</string>
+    <string name="terminal_status_deploying_claurst">Deploying ClaURST runtime…</string>
+    <string name="terminal_status_deploying_shell">ClaURST binary unavailable. Deploying fallback shell…</string>
+    <string name="terminal_status_ready">Terminal ready</string>
+    <string name="terminal_status_failed">Terminal failed to start. Please close and reopen.</string>
+    <string name="setup_title">ClaURST Setup Guide</string>
+    <string name="setup_instructions">1. Open Terminal.\n2. Wait until status shows \"Terminal ready\".\n3. Tap terminal and type commands.\n4. If ClaURST binary is unavailable, fallback shell will open.\n5. Use Browse Workspace to inspect created files.\n\nPermissions:\n• Internet: required for network-enabled commands.\n• Storage permissions are not required for normal operation.\n\nTip: Volume Down sends ESC in terminal mode.</string>
 </resources>

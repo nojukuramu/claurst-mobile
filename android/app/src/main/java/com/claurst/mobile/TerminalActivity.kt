@@ -30,6 +30,7 @@ class TerminalActivity : AppCompatActivity() {
     private val outputLock = Any()
     private val pendingOutput = StringBuilder()
     private var webViewReady = false
+    private var terminalStartFailed = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +55,7 @@ class TerminalActivity : AppCompatActivity() {
             addJavascriptInterface(bridge, "Android")
             loadUrl("file:///android_asset/terminal.html")
         }
+        setStatusUi(getString(R.string.terminal_status_loading), showOverlay = true, showSpinner = true)
 
         // Wire up terminal output → xterm.js, buffering until the page is ready.
         bridge.onOutput = { data ->
@@ -73,8 +75,17 @@ class TerminalActivity : AppCompatActivity() {
             val binaryPath = BinaryInstaller(this).installBinary()
             if (binaryPath == null) {
                 Log.w(TAG, "CLAURST binary not available; falling back to system shell")
+                setStatusUi(getString(R.string.terminal_status_deploying_shell), showOverlay = true, showSpinner = true)
+            } else {
+                setStatusUi(getString(R.string.terminal_status_deploying_claurst), showOverlay = true, showSpinner = true)
             }
             processManager.start(binaryPath)
+            if (!processManager.isRunning()) {
+                terminalStartFailed = true
+                setStatusUi(getString(R.string.terminal_status_failed), showOverlay = true, showSpinner = false)
+            } else {
+                terminalStartFailed = false
+            }
         }
     }
 
@@ -115,6 +126,13 @@ class TerminalActivity : AppCompatActivity() {
         if (buffered.isNotEmpty()) {
             writeToTerminal(buffered)
         }
+        if (terminalStartFailed) {
+            setStatusUi(getString(R.string.terminal_status_failed), showOverlay = true, showSpinner = false)
+        } else if (processManager.isRunning()) {
+            setStatusUi(getString(R.string.terminal_status_ready), showOverlay = false, showSpinner = false)
+        } else {
+            setStatusUi(getString(R.string.terminal_status_loading), showOverlay = true, showSpinner = true)
+        }
     }
 
     /**
@@ -144,6 +162,16 @@ class TerminalActivity : AppCompatActivity() {
                 android.widget.Toast.LENGTH_SHORT
             ).show()
             prefs.edit().putBoolean("esc_hint_shown", true).apply()
+        }
+    }
+
+    private fun setStatusUi(message: String, showOverlay: Boolean, showSpinner: Boolean) {
+        runOnUiThread {
+            binding.tvTerminalStatus.text = message
+            binding.progressTerminal.visibility =
+                if (showSpinner) android.view.View.VISIBLE else android.view.View.GONE
+            binding.terminalStatusOverlay.visibility =
+                if (showOverlay) android.view.View.VISIBLE else android.view.View.GONE
         }
     }
 

@@ -33,6 +33,10 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, WorkspaceActivity::class.java))
         }
 
+        binding.btnOpenSetup.setOnClickListener {
+            startActivity(Intent(this, SetupActivity::class.java))
+        }
+
         binding.tvVersion.text = getString(R.string.version_label, BuildInfo.VERSION)
     }
 }

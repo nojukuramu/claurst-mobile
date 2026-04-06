@@ -70,8 +70,25 @@
         app:layout_constraintTop_toBottomOf="@id/btn_open_terminal"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btn_open_setup"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_open_setup"
+        android:layout_width="280dp"
+        android:layout_height="48dp"
+        android:text="@string/open_setup"
+        android:textColor="@color/text_secondary"
+        app:backgroundTint="@color/surface"
+        app:strokeColor="@color/text_secondary"
+        app:strokeWidth="1dp"
+        app:cornerRadius="8dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:layout_constraintTop_toBottomOf="@id/btn_open_workspace"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/tv_version"
-        android:layout_marginBottom="48dp" />
+        android:layout_marginBottom="16dp" />
 
     <!-- Version label -->
     <TextView
