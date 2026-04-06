@@ -8,6 +8,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
 import com.claurst.mobile.databinding.ActivityTerminalBinding
+import org.json.JSONArray
 
 /**
  * Full-screen terminal activity.
@@ -15,12 +16,20 @@ import com.claurst.mobile.databinding.ActivityTerminalBinding
  * Hosts a [WebView] running xterm.js (bundled in assets) which is connected
  * to the CLAURST process via a PTY pair.  The [TerminalBridge] exposes a
  * JavaScript interface so that xterm.js can send key input and receive output.
+ *
+ * Output that arrives before the page finishes loading is buffered and flushed
+ * once [WebViewClient.onPageFinished] fires.
  */
 class TerminalActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityTerminalBinding
     private lateinit var processManager: ProcessManager
     private lateinit var bridge: TerminalBridge
+
+    /** Guards [pendingOutput] and [webViewReady]. */
+    private val outputLock = Any()
+    private val pendingOutput = StringBuilder()
+    private var webViewReady = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,23 +46,23 @@ class TerminalActivity : AppCompatActivity() {
         binding.webViewTerminal.apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
-            webViewClient = WebViewClient()
+            webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView, url: String) {
+                    flushPendingOutput()
+                }
+            }
             addJavascriptInterface(bridge, "Android")
             loadUrl("file:///android_asset/terminal.html")
         }
 
-        // Wire up terminal output → xterm.js
+        // Wire up terminal output → xterm.js, buffering until the page is ready.
         bridge.onOutput = { data ->
-            val escaped = data
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-            runOnUiThread {
-                binding.webViewTerminal.evaluateJavascript(
-                    "if(typeof writeOutput === 'function') writeOutput(\"$escaped\");",
-                    null
-                )
+            synchronized(outputLock) {
+                if (webViewReady) {
+                    writeToTerminal(data)
+                } else {
+                    pendingOutput.append(data)
+                }
             }
         }
     }
@@ -61,10 +70,9 @@ class TerminalActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (!processManager.isRunning()) {
-            val binaryPath = BinaryInstaller(this).installBinary() ?: run {
-                Log.e(TAG, "CLAURST binary not available for this architecture")
-                finish()
-                return
+            val binaryPath = BinaryInstaller(this).installBinary()
+            if (binaryPath == null) {
+                Log.w(TAG, "CLAURST binary not available; falling back to system shell")
             }
             processManager.start(binaryPath)
         }
@@ -90,6 +98,41 @@ class TerminalActivity : AppCompatActivity() {
             return true
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    /** Called once the WebView page is ready; flushes any buffered output. */
+    private fun flushPendingOutput() {
+        val buffered: String
+        synchronized(outputLock) {
+            webViewReady = true
+            buffered = pendingOutput.toString()
+            pendingOutput.clear()
+        }
+        if (buffered.isNotEmpty()) {
+            writeToTerminal(buffered)
+        }
+    }
+
+    /**
+     * Sends [data] to xterm.js via [WebView.evaluateJavascript].
+     *
+     * Uses [JSONArray] to produce a properly JSON-encoded string literal so
+     * that any special characters in the process output cannot break the
+     * JavaScript call.
+     */
+    private fun writeToTerminal(data: String) {
+        // JSONArray with a single string element gives us ["data"] which we
+        // can index at 0 to get a safe JS string literal for any byte content.
+        val jsonLiteral = JSONArray().apply { put(data) }.toString()
+        // jsonLiteral is ["<escaped-data>"], so [0] evaluates to the string.
+        val js = "if(typeof writeOutput==='function') writeOutput($jsonLiteral[0]);"
+        runOnUiThread {
+            binding.webViewTerminal.evaluateJavascript(js, null)
+        }
     }
 
     private fun showEscHintOnce() {

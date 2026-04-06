@@ -2,7 +2,6 @@ package com.claurst.mobile
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.claurst.mobile.databinding.ActivityMainBinding
 
@@ -23,17 +22,11 @@ class MainActivity : AppCompatActivity() {
         WorkspaceManager(this).ensureWorkspaceExists()
 
         binding.btnOpenTerminal.setOnClickListener {
-            val installer = BinaryInstaller(this)
-            val binaryPath = installer.installBinary()
-            if (binaryPath != null) {
-                startActivity(Intent(this, TerminalActivity::class.java))
-            } else {
-                Toast.makeText(
-                    this,
-                    getString(R.string.binary_not_found),
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+            // Always open the terminal. If the CLAURST binary is not available
+            // for this device's ABI, TerminalActivity will fall back to the
+            // system shell so users always get a working terminal.
+            BinaryInstaller(this).installBinary() // install if not yet done
+            startActivity(Intent(this, TerminalActivity::class.java))
         }
 
         binding.btnOpenWorkspace.setOnClickListener {

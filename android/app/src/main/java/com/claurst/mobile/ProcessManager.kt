@@ -36,30 +36,52 @@ class ProcessManager(
     fun isRunning(): Boolean = pid > 0
 
     /**
-     * Starts the CLAURST process.
+     * Starts the CLAURST process, falling back to `/system/bin/sh` when
+     * [binaryPath] is null (i.e. the CLAURST binary was not bundled for this
+     * device's ABI).
      *
-     * @param binaryPath  Absolute path to the executable binary on device.
+     * @param binaryPath  Absolute path to the CLAURST executable, or null to
+     *                    launch the system shell as a fallback.
      * @param cols        Initial terminal width in columns.
      * @param rows        Initial terminal height in rows.
      */
-    fun start(binaryPath: String, cols: Int = 80, rows: Int = 24) {
+    fun start(binaryPath: String?, cols: Int = 80, rows: Int = 24) {
         if (isRunning()) return
 
         masterFd = ptyHelper.createPty(rows, cols)
         if (masterFd < 0) {
             Log.e(TAG, "Failed to create PTY")
+            onOutput?.invoke("\r\n[ERROR] Could not create PTY — terminal unavailable.\r\n")
             return
         }
 
         val slaveName = ptyHelper.getSlaveDeviceName(masterFd) ?: run {
             Log.e(TAG, "Failed to get slave device name")
+            onOutput?.invoke("\r\n[ERROR] Could not open PTY slave device.\r\n")
             return
         }
 
-        val env = buildEnvironment(binaryPath)
+        val effectivePath: String
+        val args: Array<String>
+        val env: Array<String>
+
+        if (binaryPath != null) {
+            effectivePath = binaryPath
+            args = arrayOf(binaryPath)
+            env = buildEnvironment(binaryPath)
+            Log.i(TAG, "Launching CLAURST: $binaryPath")
+        } else {
+            // CLAURST binary not available — start the system shell as a fallback
+            // so the user can still interact with a working terminal.
+            effectivePath = FALLBACK_SHELL
+            args = arrayOf(FALLBACK_SHELL, "-i")
+            env = buildFallbackEnvironment()
+            Log.w(TAG, "CLAURST binary not found; falling back to $FALLBACK_SHELL")
+        }
+
         pid = ptyHelper.forkExec(
-            path = binaryPath,
-            args = arrayOf(binaryPath),
+            path = effectivePath,
+            args = args,
             env = env,
             slaveDevice = slaveName,
             rows = rows,
@@ -67,11 +89,12 @@ class ProcessManager(
         )
 
         if (pid < 0) {
-            Log.e(TAG, "Failed to fork/exec CLAURST")
+            Log.e(TAG, "Failed to fork/exec $effectivePath")
+            onOutput?.invoke("\r\n[ERROR] Failed to start process. Please restart the app.\r\n")
             return
         }
 
-        Log.i(TAG, "CLAURST started with pid=$pid on $slaveName")
+        Log.i(TAG, "Process started with pid=$pid on $slaveName")
         startOutputReader()
     }
 
@@ -141,7 +164,16 @@ class ProcessManager(
         )
     }
 
+    private fun buildFallbackEnvironment(): Array<String> = arrayOf(
+        "HOME=$workspaceDir",
+        "TERM=xterm-256color",
+        "LANG=en_US.UTF-8",
+        "PATH=/system/bin:/system/xbin",
+        "PS1=claurst-shell:\\w\\$ "
+    )
+
     companion object {
         private const val TAG = "ProcessManager"
+        private const val FALLBACK_SHELL = "/system/bin/sh"
     }
 }
