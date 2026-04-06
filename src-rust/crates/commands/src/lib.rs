@@ -4670,7 +4670,7 @@ impl SlashCommand for CopyCommand {
         }
 
         // Try system clipboard via arboard
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(not(any(target_os = "linux", target_os = "android")))]
         {
             match arboard::Clipboard::new().and_then(|mut cb| cb.set_text(text.clone())) {
                 Ok(()) => {
