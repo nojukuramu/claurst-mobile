@@ -5,13 +5,16 @@
 # when cargo-ndk is not available and the NDK bin directory is already on PATH.
 
 [target.aarch64-linux-android]
-linker = "aarch64-linux-android26-clang"
-ar     = "llvm-ar"
+linker   = "aarch64-linux-android26-clang"
+ar       = "llvm-ar"
+rustflags = ["-C", "link-arg=-lc++_shared"]
 
 [target.x86_64-linux-android]
-linker = "x86_64-linux-android26-clang"
-ar     = "llvm-ar"
+linker   = "x86_64-linux-android26-clang"
+ar       = "llvm-ar"
+rustflags = ["-C", "link-arg=-lc++_shared"]
 
 [target.armv7-linux-androideabi]
-linker = "armv7a-linux-androideabi26-clang"
-ar     = "llvm-ar"
+linker   = "armv7a-linux-androideabi26-clang"
+ar       = "llvm-ar"
+rustflags = ["-C", "link-arg=-lc++_shared"]
