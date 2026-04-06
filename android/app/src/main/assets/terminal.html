@@ -132,16 +132,22 @@
     fallback.style.display = 'block';
     fallbackOutput = document.getElementById('fallback-output');
     fallbackInputVisible = document.getElementById('fallback-input-visible');
+    fallbackInputVisible.addEventListener('input', function () {
+      var val = fallbackInputVisible.value;
+      if (val.length > 0) {
+        sendToHost(val);
+        fallbackInputVisible.value = '';
+      }
+    });
     fallbackInputVisible.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
         e.preventDefault();
-        var cmd = fallbackInputVisible.value;
-        sendToHost(cmd + '\r');
-        fallbackInputVisible.value = '';
+        sendToHost('\r');
       } else if (e.key === 'Tab') {
         e.preventDefault();
         sendToHost('\t');
-      } else if (e.key === 'Backspace' && fallbackInputVisible.value.length === 0) {
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
         sendToHost('\x7f');
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();

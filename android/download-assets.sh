@@ -17,7 +17,7 @@ JAR="$WRAPPER_DIR/gradle-wrapper.jar"
 if [ ! -f "$JAR" ]; then
   echo "Downloading gradle-wrapper.jar …"
   curl -fsSL -o "$JAR" \
-    "https://github.com/gradle/gradle/raw/v${GRADLE_VER}.0/gradle/wrapper/gradle-wrapper.jar"
+    "https://github.com/gradle/gradle/raw/v${GRADLE_VER}/gradle/wrapper/gradle-wrapper.jar"
   echo "  → $JAR"
 else
   echo "gradle-wrapper.jar already present."
