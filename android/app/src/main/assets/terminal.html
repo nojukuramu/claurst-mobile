@@ -184,6 +184,13 @@
   function fitTerminal() {
     if (!term) return;
     var container = document.getElementById('terminal-container');
+    // If the WebView layout hasn't completed yet, clientWidth/clientHeight will
+    // be 0, which would produce incorrect column/row counts (clamped to 10×4).
+    // Retry on the next animation frame until the container has real dimensions.
+    if (container.clientWidth === 0 || container.clientHeight === 0) {
+      requestAnimationFrame(fitTerminal);
+      return;
+    }
     var cell = measureCharSize();
     var cols = Math.max(10, Math.floor(container.clientWidth  / cell.width));
     var rows = Math.max(4,  Math.floor(container.clientHeight / cell.height));
@@ -196,8 +203,9 @@
   }
 
   window.addEventListener('resize', fitTerminal);
-  // Delay initial fit until the DOM has laid out.
-  setTimeout(fitTerminal, 100);
+  // Trigger initial fit; self-retries via requestAnimationFrame when layout
+  // dimensions are not yet available instead of relying on a fixed timeout.
+  fitTerminal();
 
   /* ---------- Input routing --------------------------------------------- */
   if (term) {

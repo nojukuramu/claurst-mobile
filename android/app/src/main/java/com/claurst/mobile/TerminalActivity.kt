@@ -85,6 +85,9 @@ class TerminalActivity : AppCompatActivity() {
                 setStatusUi(getString(R.string.terminal_status_failed), showOverlay = true, showSpinner = false)
             } else {
                 terminalStartFailed = false
+                // If onPageFinished already fired before the process was ready, the
+                // overlay was left visible.  Dismiss it now that both sides are up.
+                dismissOverlayIfReady()
             }
         }
     }
@@ -128,11 +131,28 @@ class TerminalActivity : AppCompatActivity() {
         }
         if (terminalStartFailed) {
             setStatusUi(getString(R.string.terminal_status_failed), showOverlay = true, showSpinner = false)
-        } else if (processManager.isRunning()) {
-            setStatusUi(getString(R.string.terminal_status_ready), showOverlay = false, showSpinner = false)
-        } else {
-            setStatusUi(getString(R.string.terminal_status_loading), showOverlay = true, showSpinner = true)
+            return
         }
+        // Dismiss the overlay only when both the WebView and the process are ready.
+        // If the process hasn't started yet (onResume hasn't reached
+        // processManager.start()), leave the current overlay — onResume will call
+        // dismissOverlayIfReady() once the process is running.
+        dismissOverlayIfReady()
+    }
+
+    /**
+     * Hides the loading overlay when both the WebView and the process are ready.
+     *
+     * Must be called from the main thread.
+     *
+     * @return true if the overlay was dismissed (both conditions met), false otherwise.
+     */
+    private fun dismissOverlayIfReady(): Boolean {
+        if (webViewReady && processManager.isRunning()) {
+            setStatusUi(getString(R.string.terminal_status_ready), showOverlay = false, showSpinner = false)
+            return true
+        }
+        return false
     }
 
     /**
