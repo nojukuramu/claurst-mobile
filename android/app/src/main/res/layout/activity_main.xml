@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    tools:context=".MainActivity">
+
+    <!-- Logo / title -->
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:fontFamily="monospace"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tv_tagline"
+        app:layout_constraintVertical_chainStyle="packed"
+        android:layout_marginTop="64dp" />
+
+    <TextView
+        android:id="@+id/tv_tagline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tagline"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:fontFamily="monospace"
+        app:layout_constraintTop_toBottomOf="@id/tv_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btn_open_terminal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="48dp" />
+
+    <!-- Open Terminal button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_open_terminal"
+        android:layout_width="280dp"
+        android:layout_height="56dp"
+        android:text="@string/open_terminal"
+        android:textColor="@color/on_primary"
+        app:backgroundTint="@color/primary"
+        app:cornerRadius="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_tagline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btn_open_workspace"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Open Workspace button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_open_workspace"
+        android:layout_width="280dp"
+        android:layout_height="56dp"
+        android:text="@string/open_workspace"
+        android:textColor="@color/primary"
+        app:backgroundTint="@color/surface"
+        app:strokeColor="@color/primary"
+        app:strokeWidth="2dp"
+        app:cornerRadius="8dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:layout_constraintTop_toBottomOf="@id/btn_open_terminal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btn_open_setup"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_open_setup"
+        android:layout_width="280dp"
+        android:layout_height="48dp"
+        android:text="@string/open_setup"
+        android:textColor="@color/text_secondary"
+        app:backgroundTint="@color/surface"
+        app:strokeColor="@color/text_secondary"
+        app:strokeWidth="1dp"
+        app:cornerRadius="8dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:layout_constraintTop_toBottomOf="@id/btn_open_workspace"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tv_version"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Version label -->
+    <TextView
+        android:id="@+id/tv_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:fontFamily="monospace"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="24dp"
+        tools:text="v0.0.7" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
