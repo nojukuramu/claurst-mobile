@@ -9,6 +9,15 @@
   <!-- xterm.js is downloaded by the build pipeline into assets/xterm/ -->
   <link rel="stylesheet" href="xterm/xterm.css" />
 
+  <script>
+    // Buffer early data if Android evaluates JS before xterm.js has initialized.
+    window.earlyOutputBuffer = [];
+    window.writeOutput = function (data) {
+      window.earlyOutputBuffer.push(data);
+    };
+    window.clearTerminal = function () {};
+  </script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -275,6 +284,14 @@
       fallbackOutput.textContent = '';
     }
   };
+
+  /* ---------- Flush early output ---------------------------------------- */
+  if (window.earlyOutputBuffer && window.earlyOutputBuffer.length > 0) {
+    for (var i = 0; i < window.earlyOutputBuffer.length; i++) {
+      window.writeOutput(window.earlyOutputBuffer[i]);
+    }
+    window.earlyOutputBuffer = [];
+  }
 
 })();
 </script>

@@ -28,9 +28,4 @@ class TerminalBridge(private val processManager: ProcessManager) {
     fun onResize(cols: Int, rows: Int) {
         processManager.resize(cols, rows)
     }
-
-    /** Programmatically send data to the process (e.g. ESC from hardware key). */
-    fun sendInput(data: ByteArray) {
-        processManager.sendInput(String(data, Charsets.UTF_8))
-    }
 }
