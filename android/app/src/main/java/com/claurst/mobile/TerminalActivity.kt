@@ -167,7 +167,7 @@ class TerminalActivity : AppCompatActivity() {
         // can index at 0 to get a safe JS string literal for any byte content.
         val jsonLiteral = JSONArray().apply { put(data) }.toString()
         // jsonLiteral is ["<escaped-data>"], so [0] evaluates to the string.
-        val js = "if(typeof writeOutput==='function') writeOutput($jsonLiteral[0]);"
+        val js = "if(typeof writeOutput==='function') writeOutput(${jsonLiteral}[0]);"
         runOnUiThread {
             binding.webViewTerminal.evaluateJavascript(js, null)
         }
